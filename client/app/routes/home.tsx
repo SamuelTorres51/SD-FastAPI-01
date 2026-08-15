@@ -5,13 +5,7 @@ import { SiteHeader } from "~/components/layout/site-header";
 import type { Route } from "./+types/home";
 
 export function meta(_args: Route.MetaArgs) {
-  return [
-    { title: "Gerenciador de Tarefas" },
-    {
-      content:
-        "Crie, gerencie e conclua as suas tarefas com prazo, prioridade e status.",
-    },
-  ];
+  return [{ title: "Gerenciador de Tarefas" }];
 }
 
 export default function Home() {

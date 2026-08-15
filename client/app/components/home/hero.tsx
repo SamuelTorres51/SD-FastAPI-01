@@ -14,14 +14,12 @@ export function Hero() {
       </p>
 
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-        <Button size="lg">
-          <Link className="flex items-center gap-2" to="/register">
-            Começar agora
-            <ArrowRight className="size-4 animate-pulse" />
-          </Link>
+        <Button render={<Link to="/register" />} size="lg">
+          Começar agora
+          <ArrowRight className="size-4 animate-pulse" />
         </Button>
-        <Button size="lg" variant="outline">
-          <Link to="/login">Já tenho conta</Link>
+        <Button render={<Link to="/login" />} size="lg" variant="outline">
+          Já tenho conta
         </Button>
       </div>
     </section>
