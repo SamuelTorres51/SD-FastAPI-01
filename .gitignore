@@ -1,0 +1,21 @@
+# Python
+server/.venv/
+server/__pycache__/
+server/**/__pycache__/
+server/.pytest_cache/
+server/**/*.pyc
+
+# Environment variables
+server/.env
+
+# Node
+client/node_modules/
+client/dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
