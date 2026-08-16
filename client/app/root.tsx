@@ -9,6 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { Toaster } from "./components/ui/sonner";
 
 export const links: Route.LinksFunction = () => [
   { href: "https://fonts.googleapis.com", rel: "preconnect" },
@@ -20,6 +21,15 @@ export const links: Route.LinksFunction = () => [
   {
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
     rel: "stylesheet",
+  },
+  {
+    href: "/favicon.svg",
+    rel: "icon",
+    type: "image/svg+xml",
+  },
+  {
+    href: "/apple-touch-icon.png",
+    rel: "apple-touch-icon",
   },
 ];
 
@@ -48,7 +58,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      <Toaster />
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
