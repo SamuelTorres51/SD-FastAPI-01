@@ -48,6 +48,8 @@ def create_task(
             detail=f"Erro ao criar tarefa: {str(e)}"
         )
 
+
+
 @router.get("/")
 def get_tasks(
     auth=Depends(get_current_user)
@@ -121,4 +123,44 @@ def update_task(
         raise HTTPException(
             status_code=500,
             detail=f"Erro ao atualizar tarefa: {str(e)}"
+        )
+
+
+#Endpoint Delete Task
+
+@router.delete("/{task_id}")
+def delete_task(
+    task_id: str,
+    auth=Depends(get_current_user)
+):
+    token = auth["token"]
+
+    supabase = get_supabase_client(token)
+
+    try:
+        response = (
+            supabase
+            .table("tasks")
+            .delete()
+            .eq("id", task_id)
+            .execute()
+        )
+
+        if not response.data:
+            raise HTTPException(
+                status_code=404,
+                detail="Tarefa não encontrada"
+            )
+
+        return {
+            "message": "Tarefa excluída com sucesso"
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao excluir tarefa: {str(e)}"
         )
