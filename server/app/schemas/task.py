@@ -1,7 +1,7 @@
 from datetime import date
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class TaskPriority(str, Enum):
@@ -26,11 +26,20 @@ class TaskCreate(BaseModel):
         max_length=500
     )
 
-    dueDate: date
+    due_date: date
 
     priority: TaskPriority
 
     status: TaskStatus
+
+    @field_validator("due_date")
+    @classmethod
+    def validate_due_date(cls, value: date):
+        if value < date.today():
+            raise ValueError(
+                "A data limite não pode estar no passado."
+            )
+        return value
 
 
 class TaskUpdate(BaseModel):
@@ -45,12 +54,21 @@ class TaskUpdate(BaseModel):
         max_length=500
     )
 
-    dueDate: date | None = None
+    due_date: date | None = None
 
     priority: TaskPriority | None = None
 
     status: TaskStatus | None = None
 
+    @field_validator("due_date")
+    @classmethod
+    def validate_due_date(cls, value: date | None):
+        if value is not None and value < date.today():
+            raise ValueError(
+                "A data limite não pode estar no passado."
+            )
+
+        return value
 
 class TaskResponse(BaseModel):
     id: str

@@ -4,6 +4,9 @@ from app.database.supabase import get_supabase_client
 from app.dependencies.auth import get_current_user
 from app.schemas.task import TaskCreate, TaskUpdate
 
+from postgrest.exceptions import APIError
+from app.core.errors import handle_supabase_error
+
 
 router = APIRouter(
     prefix="/tasks",
@@ -11,7 +14,7 @@ router = APIRouter(
 )
 
 
-@router.post("/")
+@router.post("/", status_code=201)
 def create_task(
     data: TaskCreate,
     auth=Depends(get_current_user)
@@ -30,7 +33,6 @@ def create_task(
         "status": data.status.value
     }
 
-
     try:
         response = (
             supabase
@@ -38,14 +40,19 @@ def create_task(
             .insert(task_data)
             .select("*")
             .execute()
-)
+        )
 
         return response.data[0]
 
+    except APIError as e:
+        handle_supabase_error(e)
+
     except Exception as e:
+        print(f"Erro inesperado ao criar tarefa: {e}")
+
         raise HTTPException(
             status_code=500,
-            detail=f"Erro ao criar tarefa: {str(e)}"
+            detail="Erro interno ao criar tarefa."
         )
 
 
@@ -69,10 +76,13 @@ def get_tasks(
 
         return response.data
 
+    except APIError as e:
+        handle_supabase_error(e)
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Erro ao buscar tarefas: {str(e)}"
+            detail=f"Erro interno ao buscar tarefas: {str(e)}"
         )
 
 
@@ -91,12 +101,12 @@ def update_task(
 
     update_data = data.model_dump(
         exclude_none=True,
-        by_alias=True
+        by_alias=True,
+        mode="json"
     )
 
     if "dueDate" in update_data:
-        update_data["due_date"] = update_data["dueDate"].isoformat()
-        del update_data["dueDate"]
+        update_data["due_date"] = update_data.pop("dueDate")
 
     try:
         response = (
@@ -119,10 +129,13 @@ def update_task(
     except HTTPException:
         raise
 
+    except APIError as e:
+        handle_supabase_error(e)
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Erro ao atualizar tarefa: {str(e)}"
+            detail=f"Erro interno ao atualizar tarefa: {str(e)}"
         )
 
 
@@ -159,8 +172,11 @@ def delete_task(
     except HTTPException:
         raise
 
+    except APIError as e:
+        handle_supabase_error(e)
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Erro ao excluir tarefa: {str(e)}"
+            detail=f"Erro interno ao excluir tarefa: {str(e)}"
         )
