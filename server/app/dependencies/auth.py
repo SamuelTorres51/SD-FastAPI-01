@@ -21,7 +21,13 @@ def get_current_user(
                 detail="Usuário não autenticado"
             )
 
-        return response.user
+        return {
+            "user": response.user,
+            "token": token
+        }
+
+    except HTTPException:
+        raise
 
     except Exception:
         raise HTTPException(

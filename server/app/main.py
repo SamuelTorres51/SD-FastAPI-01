@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.routers.auth import router as auth_router
+from app.routers import tasks
 
 app = FastAPI(
     title="Task Manager API",
@@ -8,6 +9,7 @@ app = FastAPI(
 )
 
 app.include_router(auth_router)
+app.include_router(tasks.router)
 
 @app.get("/")
 def root():

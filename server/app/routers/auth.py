@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.database.supabase import supabase
 from app.schemas.auth import SignupRequest, LoginRequest
