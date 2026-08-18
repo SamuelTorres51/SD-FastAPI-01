@@ -33,7 +33,7 @@ export default function Register() {
     register,
     setError,
   } = useForm<RegisterValues>({
-    defaultValues: { confirmPassword: "", email: "", password: "" },
+    defaultValues: { confirmPassword: "", email: "", name: "", password: "" },
     mode: "onTouched",
     resolver: zodResolver(registerSchema),
   });
@@ -67,10 +67,22 @@ export default function Register() {
       <form noValidate onSubmit={handleSubmit(onSubmit)}>
         <FieldGroup>
           {errors.root ? (
-            <p className="rounded-md bg-destructive.10 px-3 py-2 text-destructive text-sm">
+            <p className="rounded-md bg-destructive/10 px-3 py-2 text-destructive text-sm">
               {errors.root.message}
             </p>
           ) : null}
+
+          <Field data-invalid={Boolean(errors.name)}>
+            <FieldLabel htmlFor="name">Nome</FieldLabel>
+            <Input
+              aria-invalid={Boolean(errors.name)}
+              id="name"
+              placeholder="Seu nome"
+              type="text"
+              {...register("name")}
+            />
+            <FieldError errors={[errors.email]} />
+          </Field>
 
           <Field data-invalid={Boolean(errors.email)}>
             <FieldLabel htmlFor="email">Email</FieldLabel>

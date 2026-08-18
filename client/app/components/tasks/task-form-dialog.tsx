@@ -1,15 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
+  buildTaskFormSchema,
   PRIORITY_LABELS,
   STATUS_LABELS,
   TASK_PRIORITIES,
   TASK_STATUSES,
   type Task,
   type TaskFormValues,
-  taskFormSchema,
+  todayAsISODate,
 } from "~/lib/schemas/tasks";
 import { Button } from "../ui/button";
 import {
@@ -36,7 +37,7 @@ const MAX_DESCRIPTION_LENGTH = 500;
 
 const EMPTY_TASK: TaskFormValues = {
   description: "",
-  dueDate: "",
+  due_date: "",
   priority: "media",
   status: "pendente",
   title: "",
@@ -55,6 +56,14 @@ export function TaskFormDialog({
   open,
   task,
 }: TaskFormDialogProps) {
+  const schema = useMemo(
+    () => buildTaskFormSchema(task?.due_date),
+    [task?.due_date]
+  );
+
+  const today = todayAsISODate();
+  const minDueDate = task && task.due_date < today ? task.due_date : today;
+
   const {
     control,
     formState: { errors, isSubmitting },
@@ -64,7 +73,7 @@ export function TaskFormDialog({
   } = useForm<TaskFormValues>({
     defaultValues: EMPTY_TASK,
     mode: "onTouched",
-    resolver: zodResolver(taskFormSchema),
+    resolver: zodResolver(schema),
   });
 
   useEffect(() => {
@@ -76,7 +85,7 @@ export function TaskFormDialog({
       task
         ? {
             description: task.description,
-            dueDate: task.dueDate,
+            due_date: task.due_date,
             priority: task.priority,
             status: task.status,
             title: task.title,
@@ -123,15 +132,16 @@ export function TaskFormDialog({
               <FieldError errors={[errors.description]} />
             </Field>
 
-            <Field data-invalid={Boolean(errors.dueDate)}>
-              <FieldLabel htmlFor="dueDate">Data limite</FieldLabel>
+            <Field data-invalid={Boolean(errors.due_date)}>
+              <FieldLabel htmlFor="due_date">Data limite</FieldLabel>
               <Input
-                aria-invalid={Boolean(errors.dueDate)}
-                id="dueDate"
+                aria-invalid={Boolean(errors.due_date)}
+                id="due_date"
+                min={minDueDate}
                 type="date"
-                {...register("dueDate")}
+                {...register("due_date")}
               />
-              <FieldError errors={[errors.dueDate]} />
+              <FieldError errors={[errors.due_date]} />
             </Field>
 
             <div className="grid gap-4 sm:grid-cols-2">

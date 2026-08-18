@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 export const MIN_PASSWORD_LENGTH = 6;
+export const MIN_NAME_LENGHT = 3;
+export const MAX_NAME_LENGHT = 100;
 
 export const loginSchema = z.object({
   email: z.email({ error: "Informe um e-mail válido." }),
@@ -15,6 +17,15 @@ export const registerSchema = z
       .string({ error: "Confirme sua senha." })
       .min(1, { error: "Confirme sua senha." }),
     email: z.email({ error: "Informe um e-mail válido." }),
+    name: z
+      .string({ error: "Informe seu nome" })
+      .trim()
+      .min(MIN_NAME_LENGHT, {
+        error: `O nome deve ter no mínimo ${MIN_NAME_LENGHT} caracteres`,
+      })
+      .max(MAX_NAME_LENGHT, {
+        error: `O nome deve ter no máximo ${MAX_NAME_LENGHT} caracteres`,
+      }),
     password: z
       .string({ error: "Informe sua senha." })
       .min(MIN_PASSWORD_LENGTH, {

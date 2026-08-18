@@ -94,7 +94,7 @@ export function TaskCard({ onDelete, onEdit, task }: TaskCardProps) {
             ) : (
               <CalendarClock className="size-3.5" />
             )}
-            {formatDueDate(task.dueDate)}
+            {formatDueDate(task.due_date)}
             {overdue ? " — atrasada" : null}
           </span>
         </div>

@@ -36,7 +36,7 @@ export const localTaskService: TaskService = {
     await delay();
     const task: Task = {
       ...input,
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
       id: crypto.randomUUID(),
     };
     writeTasks([task, ...readTasks()]);
