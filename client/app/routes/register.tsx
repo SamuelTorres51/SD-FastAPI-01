@@ -15,20 +15,20 @@ import {
 import { Input } from "~/components/ui/input";
 import { ApiError } from "~/lib/api";
 import { useAuth } from "~/lib/auth/auth-context";
+import { isAuthenticated } from "~/lib/auth/session";
 import {
   MIN_PASSWORD_LENGTH,
   type RegisterValues,
   registerSchema,
 } from "~/lib/schemas/auth";
 import type { Route } from "./+types/register";
-import { isAuthenticated } from "~/lib/auth/session";
 
 export function clientLoader() {
   if (isAuthenticated()) {
-    throw redirect("/tasks")
+    throw redirect("/tasks");
   }
 
-  return null
+  return null;
 }
 
 export function meta(_args: Route.MetaArgs) {

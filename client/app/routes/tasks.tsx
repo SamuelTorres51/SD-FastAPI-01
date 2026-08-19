@@ -1,5 +1,6 @@
 import { ClipboardList, Loader2, Plus, Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { redirect, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { SiteFooter } from "~/components/layout/site-footer";
 import { SiteHeader } from "~/components/layout/site-header";
@@ -15,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { ApiError } from "~/lib/api";
+import { isAuthenticated } from "~/lib/auth/session";
 import {
   PRIORITY_LABELS,
   STATUS_LABELS,
@@ -27,9 +30,7 @@ import {
 } from "~/lib/schemas/tasks";
 import { changedFields, taskService } from "~/lib/tasks/task-service";
 import type { Route } from "./+types/tasks";
-import { isAuthenticated } from "~/lib/auth/session";
-import { redirect } from "react-router";
-import { ApiError } from "~/lib/api";
+import { useAuth } from "~/lib/auth/auth-context";
 
 const ALL = "all";
 
@@ -48,20 +49,15 @@ const PRIORITY_FILTER_LABELS: Record<PriorityFilter, string> = {
 
 export function clientLoader() {
   if (!isAuthenticated()) {
-    throw redirect('/login')
+    throw redirect("/login");
   }
 
-  return null
+  return null;
 }
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: "Minhas Tarefas — Gerenciador de Tarefas" }];
 }
-
-function errorMessage(error: unknown, fallback: string) {
-  return error instanceof ApiError ? error.message : fallback;
-}
-
 export default function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,11 +71,25 @@ export default function Tasks() {
   const [taskBeingDeleted, setTaskBeingDeleted] = useState<Task | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const navigate = useNavigate()
+  const { signOut } = useAuth()
+
+  const handleError = useCallback((error: unknown, fallback: string) => {
+    if (error instanceof ApiError && error.status === 401) {
+      signOut()
+      toast.error('Sua sessão expirou, faça login novamente.')
+      navigate('/login', { replace: true })
+      return
+    }
+
+    toast.error(error instanceof ApiError ? error.message : fallback)
+  }, [navigate, signOut])
+
   useEffect(() => {
     taskService
       .list()
       .then(setTasks)
-      .catch(() => toast.error("Não foi possível carregar suas tarefas."))
+      .catch((error) => handleError(error, "Não foi possível carregar suas tarefas."))
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -128,13 +138,11 @@ export default function Tasks() {
       setIsFormOpen(false);
       setTaskBeingEdited(null);
     } catch (error) {
-      toast.error(
-        errorMessage(
-          error,
-          taskBeingEdited
-            ? "Não foi possível atualizar a tarefa."
-            : "Não foi possível criar a tarefa."
-        )
+      handleError(
+        error,
+        taskBeingEdited
+          ? "Não foi possível atualizar a tarefa."
+          : "Não foi possível criar a tarefa."
       );
     }
   }
@@ -153,7 +161,7 @@ export default function Tasks() {
       toast.success("Tarefa excluída com sucesso!");
       setTaskBeingDeleted(null);
     } catch (error) {
-      toast.error(errorMessage(error, "Não foi possível excluir a tarefa."));
+      handleError(error, "Não foi possível excluir a tarefa.");
     } finally {
       setIsDeleting(false);
     }

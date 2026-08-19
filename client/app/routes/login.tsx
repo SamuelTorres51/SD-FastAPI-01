@@ -14,16 +14,16 @@ import {
 import { Input } from "~/components/ui/input";
 import { ApiError } from "~/lib/api";
 import { useAuth } from "~/lib/auth/auth-context";
+import { isAuthenticated } from "~/lib/auth/session";
 import { type LoginValues, loginSchema } from "~/lib/schemas/auth";
 import type { Route } from "./+types/login";
-import { isAuthenticated } from "~/lib/auth/session";
 
 export function clientLoader() {
   if (isAuthenticated()) {
-    throw redirect("/tasks")
+    throw redirect("/tasks");
   }
 
-  return null
+  return null;
 }
 
 export function meta(_args: Route.MetaArgs) {

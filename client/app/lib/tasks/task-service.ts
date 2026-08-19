@@ -13,10 +13,10 @@ export function changedFields(
   original: Task,
   values: TaskFormValues
 ): Partial<TaskFormValues> {
-  const changed: Partial<TaskFormValues> = {}
+  const changed: Partial<TaskFormValues> = {};
 
   if (values.description !== original.description) {
-    changed.description = values.description
+    changed.description = values.description;
   }
   if (values.due_date !== original.due_date) {
     changed.due_date = values.due_date;
@@ -36,30 +36,30 @@ export function changedFields(
 
 export const httpTaskService: TaskService = {
   create(input) {
-    return apiRequest<Task>('/tasks/', {
+    return apiRequest<Task>("/tasks/", {
       body: input,
-      method: 'POST',
-      token: getToken()
-    })
+      method: "POST",
+      token: getToken(),
+    });
   },
   list() {
     return apiRequest<Task[]>("/tasks/", {
-      token: getToken()
-    })
+      token: getToken(),
+    });
   },
   async remove(id) {
     await apiRequest<{ message: string }>(`/tasks/${id}`, {
-      method: 'DELETE',
-      token: getToken()
-    })
+      method: "DELETE",
+      token: getToken(),
+    });
   },
   update(id, input) {
     return apiRequest<Task>(`/tasks/${id}`, {
       body: input,
       method: "PUT",
-      token: getToken()
-    })
-  }
-}
+      token: getToken(),
+    });
+  },
+};
 
 export const taskService = httpTaskService;
