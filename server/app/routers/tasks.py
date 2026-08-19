@@ -28,7 +28,7 @@ def create_task(
         "user_id": user.id,
         "title": data.title,
         "description": data.description,
-        "due_date": data.dueDate.isoformat(),
+        "due_date": data.due_date.isoformat(),
         "priority": data.priority.value,
         "status": data.status.value
     }
@@ -45,7 +45,7 @@ def create_task(
         return response.data[0]
 
     except APIError as e:
-        handle_supabase_error(e)
+        raise handle_supabase_error(e)
 
     except Exception as e:
         print(f"Erro inesperado ao criar tarefa: {e}")
@@ -77,12 +77,12 @@ def get_tasks(
         return response.data
 
     except APIError as e:
-        handle_supabase_error(e)
+        raise handle_supabase_error(e)
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=500,
-            detail=f"Erro interno ao buscar tarefas: {str(e)}"
+            detail="Erro interno ao buscar tarefas."
         )
 
 
@@ -104,9 +104,6 @@ def update_task(
         by_alias=True,
         mode="json"
     )
-
-    if "dueDate" in update_data:
-        update_data["due_date"] = update_data.pop("dueDate")
 
     try:
         response = (
@@ -130,12 +127,12 @@ def update_task(
         raise
 
     except APIError as e:
-        handle_supabase_error(e)
+        raise handle_supabase_error(e)
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=500,
-            detail=f"Erro interno ao atualizar tarefa: {str(e)}"
+            detail="Erro interno ao atualizar tarefa."
         )
 
 
@@ -173,10 +170,10 @@ def delete_task(
         raise
 
     except APIError as e:
-        handle_supabase_error(e)
+        raise handle_supabase_error(e)
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=500,
-            detail=f"Erro interno ao excluir tarefa: {str(e)}"
+            detail="Erro interno ao excluir tarefa."
         )
