@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router";
+import { Link, redirect, useNavigate } from "react-router";
 import { AuthShell } from "~/components/auth/auth-shell";
 import { PasswordInput } from "~/components/auth/password-input";
 import { Button } from "~/components/ui/button";
@@ -12,8 +12,19 @@ import {
   FieldLabel,
 } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
+import { ApiError } from "~/lib/api";
+import { useAuth } from "~/lib/auth/auth-context";
 import { type LoginValues, loginSchema } from "~/lib/schemas/auth";
 import type { Route } from "./+types/login";
+import { isAuthenticated } from "~/lib/auth/session";
+
+export function clientLoader() {
+  if (isAuthenticated()) {
+    throw redirect("/tasks")
+  }
+
+  return null
+}
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: "Entrar — Gerenciador de Tarefas" }];
@@ -21,6 +32,7 @@ export function meta(_args: Route.MetaArgs) {
 
 export default function Login() {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   const {
     formState: { errors, isSubmitting },
@@ -33,14 +45,16 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
 
-  async function onSubmit(_values: LoginValues) {
+  async function onSubmit(values: LoginValues) {
     try {
-      // implementar depois com o supabeisi
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      await signIn(values);
       navigate("/tasks");
-    } catch {
+    } catch (error) {
       setError("root", {
-        message: "Email ou senha inválidos. Tente novamente",
+        message:
+          error instanceof ApiError
+            ? error.message
+            : "Não é possível fazer o login no momento.",
       });
     }
   }

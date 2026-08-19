@@ -1,6 +1,5 @@
 import { ClipboardList, Loader2, Plus, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { SiteFooter } from "~/components/layout/site-footer";
 import { SiteHeader } from "~/components/layout/site-header";
@@ -26,8 +25,11 @@ import {
   type TaskPriority,
   type TaskStatus,
 } from "~/lib/schemas/tasks";
-import { taskService } from "~/lib/tasks/task-service";
+import { changedFields, taskService } from "~/lib/tasks/task-service";
 import type { Route } from "./+types/tasks";
+import { isAuthenticated } from "~/lib/auth/session";
+import { redirect } from "react-router";
+import { ApiError } from "~/lib/api";
 
 const ALL = "all";
 
@@ -44,13 +46,20 @@ const PRIORITY_FILTER_LABELS: Record<PriorityFilter, string> = {
   all: "Todas as prioridades",
 };
 
-const PLACEHOLDER_USER = {
-  email: "johndoe@email.com",
-  name: "John Doe",
-};
+export function clientLoader() {
+  if (!isAuthenticated()) {
+    throw redirect('/login')
+  }
+
+  return null
+}
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: "Minhas Tarefas — Gerenciador de Tarefas" }];
+}
+
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof ApiError ? error.message : fallback;
 }
 
 export default function Tasks() {
@@ -74,7 +83,6 @@ export default function Tasks() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const navigate = useNavigate();
   const visibleTasks = useMemo(() => {
     const term = search.trim().toLowerCase();
     return tasks.filter(
@@ -84,11 +92,6 @@ export default function Tasks() {
         (term === "" || task.title.toLowerCase().includes(term))
     );
   }, [priorityFilter, search, statusFilter, tasks]);
-
-  function handleSignOut() {
-    // implementar dps
-    navigate("/");
-  }
 
   function openCreateDialog() {
     setTaskBeingEdited(null);
@@ -103,7 +106,15 @@ export default function Tasks() {
   async function handleSubmit(values: TaskFormValues) {
     try {
       if (taskBeingEdited) {
-        const updated = await taskService.update(taskBeingEdited.id, values);
+        const changes = changedFields(taskBeingEdited, values);
+
+        if (Object.keys(changes).length === 0) {
+          setIsFormOpen(false);
+          setTaskBeingEdited(null);
+          return;
+        }
+
+        const updated = await taskService.update(taskBeingEdited.id, changes);
         setTasks((current) =>
           current.map((task) => (task.id === updated.id ? updated : task))
         );
@@ -116,11 +127,14 @@ export default function Tasks() {
 
       setIsFormOpen(false);
       setTaskBeingEdited(null);
-    } catch {
+    } catch (error) {
       toast.error(
-        taskBeingEdited
-          ? "Não foi possível atualizar a tarefa."
-          : "Não foi possível criar a tarefa."
+        errorMessage(
+          error,
+          taskBeingEdited
+            ? "Não foi possível atualizar a tarefa."
+            : "Não foi possível criar a tarefa."
+        )
       );
     }
   }
@@ -138,8 +152,8 @@ export default function Tasks() {
       );
       toast.success("Tarefa excluída com sucesso!");
       setTaskBeingDeleted(null);
-    } catch {
-      toast.error("Não foi possível excluir a tarefa.");
+    } catch (error) {
+      toast.error(errorMessage(error, "Não foi possível excluir a tarefa."));
     } finally {
       setIsDeleting(false);
     }
@@ -147,7 +161,7 @@ export default function Tasks() {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <SiteHeader onSignOut={handleSignOut} user={PLACEHOLDER_USER} />
+      <SiteHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>

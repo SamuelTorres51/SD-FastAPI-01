@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router";
+import { Link, redirect, useNavigate } from "react-router";
 import { AuthShell } from "~/components/auth/auth-shell";
 import { PasswordInput } from "~/components/auth/password-input";
 import { Button } from "~/components/ui/button";
@@ -13,12 +13,23 @@ import {
   FieldLabel,
 } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
+import { ApiError } from "~/lib/api";
+import { useAuth } from "~/lib/auth/auth-context";
 import {
   MIN_PASSWORD_LENGTH,
   type RegisterValues,
   registerSchema,
 } from "~/lib/schemas/auth";
 import type { Route } from "./+types/register";
+import { isAuthenticated } from "~/lib/auth/session";
+
+export function clientLoader() {
+  if (isAuthenticated()) {
+    throw redirect("/tasks")
+  }
+
+  return null
+}
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: "Registrar — Gerenciador de Tarefas" }];
@@ -26,6 +37,7 @@ export function meta(_args: Route.MetaArgs) {
 
 export default function Register() {
   const navigate = useNavigate();
+  const { signUp } = useAuth();
 
   const {
     formState: { errors, isSubmitting },
@@ -38,15 +50,20 @@ export default function Register() {
     resolver: zodResolver(registerSchema),
   });
 
-  async function onSubmit(_values: RegisterValues) {
+  async function onSubmit(values: RegisterValues) {
     try {
-      // imeplementar depoise
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      await signUp({
+        email: values.email,
+        name: values.name,
+        password: values.password,
+      });
       navigate("/tasks");
-    } catch {
+    } catch (error) {
       setError("root", {
         message:
-          "Não foi possível criar a conta no momento. Tente novamente mais tarde!",
+          error instanceof ApiError
+            ? error.message
+            : "Não foi possível criar a conta no momento. Tente novamente mais tarde!",
       });
     }
   }
@@ -81,7 +98,7 @@ export default function Register() {
               type="text"
               {...register("name")}
             />
-            <FieldError errors={[errors.email]} />
+            <FieldError errors={[errors.name]} />
           </Field>
 
           <Field data-invalid={Boolean(errors.email)}>

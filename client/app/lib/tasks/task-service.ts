@@ -1,71 +1,65 @@
+import { apiRequest } from "../api";
+import { getToken } from "../auth/session";
 import type { Task, TaskFormValues } from "../schemas/tasks";
 
 export interface TaskService {
   create: (input: TaskFormValues) => Promise<Task>;
   list: () => Promise<Task[]>;
   remove: (id: string) => Promise<void>;
-  update: (id: string, input: TaskFormValues) => Promise<Task>;
+  update: (id: string, input: Partial<TaskFormValues>) => Promise<Task>;
 }
 
-const STORAGE_KEY = "tasks";
-const FAKE_DELAY = 250;
+export function changedFields(
+  original: Task,
+  values: TaskFormValues
+): Partial<TaskFormValues> {
+  const changed: Partial<TaskFormValues> = {}
 
-function delay() {
-  return new Promise((resolve) => setTimeout(resolve, FAKE_DELAY));
-}
-
-function readTasks(): Task[] {
-  if (typeof localStorage === "undefined") {
-    return [];
+  if (values.description !== original.description) {
+    changed.description = values.description
+  }
+  if (values.due_date !== original.due_date) {
+    changed.due_date = values.due_date;
+  }
+  if (values.priority !== original.priority) {
+    changed.priority = values.priority;
+  }
+  if (values.status !== original.status) {
+    changed.status = values.status;
+  }
+  if (values.title !== original.title) {
+    changed.title = values.title;
   }
 
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Task[]) : [];
-  } catch {
-    return [];
-  }
+  return changed;
 }
 
-function writeTasks(tasks: Task[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-}
-
-export const localTaskService: TaskService = {
-  async create(input) {
-    await delay();
-    const task: Task = {
-      ...input,
-      created_at: new Date().toISOString(),
-      id: crypto.randomUUID(),
-    };
-    writeTasks([task, ...readTasks()]);
-    return task;
+export const httpTaskService: TaskService = {
+  create(input) {
+    return apiRequest<Task>('/tasks/', {
+      body: input,
+      method: 'POST',
+      token: getToken()
+    })
   },
-  async list() {
-    await delay();
-    return readTasks();
+  list() {
+    return apiRequest<Task[]>("/tasks/", {
+      token: getToken()
+    })
   },
   async remove(id) {
-    await delay();
-    const tasks = readTasks();
-    if (!tasks.some((task) => task.id === id)) {
-      throw new Error("Tarefa não encontrada.");
-    }
-    writeTasks(tasks.filter((task) => task.id !== id));
+    await apiRequest<{ message: string }>(`/tasks/${id}`, {
+      method: 'DELETE',
+      token: getToken()
+    })
   },
-  async update(id, input) {
-    await delay();
-    const tasks = readTasks();
-    const index = tasks.findIndex((task) => task.id === id);
-    if (index === -1) {
-      throw new Error("Tarefa não encontrada.");
-    }
-    const updated: Task = { ...tasks[index], ...input };
-    tasks[index] = updated;
-    writeTasks(tasks);
-    return updated;
-  },
-};
+  update(id, input) {
+    return apiRequest<Task>(`/tasks/${id}`, {
+      body: input,
+      method: "PUT",
+      token: getToken()
+    })
+  }
+}
 
-export const taskService = localTaskService;
+export const taskService = httpTaskService;
