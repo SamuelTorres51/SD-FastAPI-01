@@ -46,7 +46,7 @@ def signup(data: SignupRequest):
             detail="Erro interno ao cadastrar usuário."
         )
 
-    if response.user is None or response.session is None:
+    if response.user is None:
         raise HTTPException(
             status_code=400,
             detail="Não foi possível cadastrar o usuário."
@@ -58,6 +58,12 @@ def signup(data: SignupRequest):
         raise HTTPException(
             status_code=409,
             detail="Este e-mail já está cadastrado."
+        )
+
+    if response.session is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Não foi possível cadastrar o usuário."
         )
 
     return {
