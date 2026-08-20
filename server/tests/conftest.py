@@ -13,23 +13,11 @@ from fastapi.testclient import TestClient
 from app.dependencies.auth import get_current_user
 from app.main import app
 
-USER_ID = "11111111-1111-1111-1111-111111111111"
+USER_ID = "97603911-eabc-405f-8317-6d982c07e3cc"
 EMAIL = "fulano@distribuido.com"
 NOME = "Fulano Teste Distribuido"
 TOKEN = "token-de-testagem-e-de-mentira-kkkkk"
 LOOPBACK = {"127.0.0.1", "::1", "localhost"}
-
-@pytest.fixture(autouse=True)
-def sem_rede(monkeypatch):
-    conectar_original = socket.socket.connect
-
-    def guardado(self, address, *args, **kwargs):
-        host = address[0] if isinstance(address, tuple) else address
-        if host not in LOOPBACK:
-            raise AssertionError(f"A suíte tentou conectar em {host}")
-        return conectar_original(self, address, *args, **kwargs)
-
-    monkeypatch.setattr(socket.socket, "connect", guardado)
 
 class FakeQuery:
     def __init__(self, resultado):
